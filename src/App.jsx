@@ -1,13 +1,12 @@
-function App() {
-  return (
-    <>
-      <div className="flex items-center justify-center h-screen bg-gray-900">
-        <h1 className="text-4xl font-bold bg-red-400 text-white">
-          Tailwind is working!
-        </h1>
-      </div>
-    </>
-  );
-}
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Login from './pages/login/login'
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
