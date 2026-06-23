@@ -62,6 +62,12 @@ function Login() {
             </button>
           </form>
         </div>
+        <p className="text-gray-400 mt-4 text-center">
+          Don't have an account?{" "}
+          <a href="/signup" className="text-blue-400 hover:underline">
+            Sign Up
+          </a>
+        </p>
       </div>
     </>
   );
