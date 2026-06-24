@@ -17,6 +17,14 @@ export default function LecturerDashboard() {
     getUser();
   }, []);
 
+  // Clear messages after 5 seconds
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   const getUser = async () => {
     const { data } = await supabase.auth.getUser();
     setUserEmail(data?.user?.email || "");
@@ -40,12 +48,19 @@ export default function LecturerDashboard() {
         roomData.find((room) => room.id === booking.room_id)?.name || "Unknown",
     }));
 
+    // Sort by date then by start time
+    merged.sort((a, b) => {
+      const dateDiff = new Date(a.date) - new Date(b.date);
+      if (dateDiff !== 0) return dateDiff;
+      return a.start_time.localeCompare(b.start_time);
+    });
+
     setBookings(merged);
   };
 
   const handleBooking = async () => {
     if (!roomId || !date || !startTime || !endTime) {
-      setMessage("Please fill in all fields");
+      setMessage("Please fill in all fields to complete reservation.");
       return;
     }
 
@@ -60,7 +75,7 @@ export default function LecturerDashboard() {
     if (error) {
       setMessage("Booking failed: " + error.message);
     } else {
-      setMessage("Room booked successfully!");
+      setMessage("Room reserved successfully!");
       setRoomId("");
       setDate("");
       setStartTime("");
@@ -75,85 +90,196 @@ export default function LecturerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Lecturer Dashboard</h1>
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 px-4 py-2 rounded hover:bg-red-700"
-        >
-          Logout
-        </button>
-      </div>
+    <div className="min-h-screen bg-branddark-bg text-gray-100 flex flex-col font-sans">
+      {/* Background ambient light */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-brandpurple/5 blur-[120px] pointer-events-none"></div>
 
-      {message && <p className="text-green-400 mb-4">{message}</p>}
-
-      {/* Booking Form */}
-      <div className="bg-gray-800 p-6 rounded-lg mb-8">
-        <h2 className="text-xl font-bold mb-4">Book a Room</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <select
-            className="p-3 rounded bg-gray-700 text-white col-span-2"
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-          >
-            <option value="">Select a room</option>
-            {rooms.map((room) => (
-              <option key={room.id} value={room.id}>
-                {room.name}
-              </option>
-            ))}
-          </select>
-          <input
-            type="date"
-            className="p-3 rounded bg-gray-700 text-white"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-          <div className="flex gap-2">
-            <input
-              type="time"
-              className="flex-1 p-3 rounded bg-gray-700 text-white"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-            />
-            <input
-              type="time"
-              className="flex-1 p-3 rounded bg-gray-700 text-white"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            />
+      {/* Header bar */}
+      <header className="border-b border-branddark-border/80 bg-branddark-card/40 backdrop-blur-md sticky top-0 z-10 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-gradient-to-tr from-brandpurple to-brandgold rounded-lg flex items-center justify-center shadow-lg shadow-brandpurple/20">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+              AetherBook <span className="text-xs px-2 py-0.5 bg-brandgold/20 text-brandgold-light rounded-full border border-brandgold/30 font-semibold uppercase">Lecturer</span>
+            </h1>
+            <p className="text-xs text-branddark-muted">{userEmail}</p>
           </div>
         </div>
-        <button
-          onClick={handleBooking}
-          className="mt-4 w-full bg-green-600 p-3 rounded font-bold hover:bg-green-700"
-        >
-          Book Room
-        </button>
-      </div>
 
-      {/* Bookings List */}
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-xl font-bold mb-4">All Bookings</h2>
-        {bookings.length === 0 && (
-          <p className="text-gray-400">No bookings yet</p>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 border border-red-900/50 text-red-400 rounded-lg text-sm font-semibold hover:bg-red-950/30 hover:border-red-800 transition-all flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Sign Out
+        </button>
+      </header>
+
+      {/* Main Workspace */}
+      <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-8 z-0">
+        {/* Status notification */}
+        {message && (
+          <div className="p-4 rounded-xl bg-brandpurple/10 border border-brandpurple/30 text-brandpurple-light flex items-center justify-between animate-fade-in shadow-lg">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-brandpurple-light shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-semibold tracking-wide">{message}</span>
+            </div>
+            <button onClick={() => setMessage("")} className="text-branddark-muted hover:text-white transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         )}
-        {bookings.map((booking) => (
-          <div key={booking.id} className="bg-gray-700 p-4 rounded mb-2">
-            <div className="flex justify-between">
-              <span className="font-bold">{booking.roomName}</span>
-              <span className="text-yellow-400">{booking.date}</span>
+
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Booking Form Panel */}
+          <div className="lg:col-span-5 bg-branddark-card border border-branddark-border/60 rounded-2xl p-6 shadow-xl flex flex-col space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <svg className="w-5 h-5 text-brandpurple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Reserve a Classroom
+              </h2>
+              <p className="text-xs text-branddark-muted mt-1">Submit a reservation slot for any active lecture room below.</p>
             </div>
-            <div className="text-gray-300 text-sm mt-1">
-              {booking.start_time} - {booking.end_time}
+
+            <div className="space-y-4">
+              {/* Select Room */}
+              <div>
+                <label className="block text-xs font-semibold text-branddark-muted uppercase tracking-wider mb-2">Lecture Hall</label>
+                <select
+                  className="w-full p-3 rounded-lg bg-branddark-input border border-branddark-border text-white text-sm focus:outline-none focus:border-brandpurple transition-all cursor-pointer"
+                  value={roomId}
+                  onChange={(e) => setRoomId(e.target.value)}
+                >
+                  <option value="">Choose a classroom...</option>
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.id}>
+                      {room.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date selection */}
+              <div>
+                <label className="block text-xs font-semibold text-branddark-muted uppercase tracking-wider mb-2">Reservation Date</label>
+                <input
+                  type="date"
+                  className="w-full p-3 rounded-lg bg-branddark-input border border-branddark-border text-white text-sm focus:outline-none focus:border-brandpurple transition-all cursor-pointer"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </div>
+
+              {/* Time select range */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-branddark-muted uppercase tracking-wider mb-2">Start Time</label>
+                  <input
+                    type="time"
+                    className="w-full p-3 rounded-lg bg-branddark-input border border-branddark-border text-white text-sm focus:outline-none focus:border-brandpurple transition-all cursor-pointer"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-branddark-muted uppercase tracking-wider mb-2">End Time</label>
+                  <input
+                    type="time"
+                    className="w-full p-3 rounded-lg bg-branddark-input border border-branddark-border text-white text-sm focus:outline-none focus:border-brandpurple transition-all cursor-pointer"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="text-gray-400 text-sm">
-              {booking.lecturer_email}
+
+            <button
+              onClick={handleBooking}
+              className="w-full p-3.5 mt-2 bg-gradient-to-r from-brandpurple to-purple-800 hover:from-brandpurple-light hover:to-brandpurple text-white rounded-lg font-semibold tracking-wide shadow-lg shadow-brandpurple/20 transition-all duration-300"
+            >
+              Book Room Slot
+            </button>
+          </div>
+
+          {/* Bookings Overview Panel */}
+          <div className="lg:col-span-7 bg-branddark-card border border-branddark-border/60 rounded-2xl p-6 shadow-xl flex flex-col space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <svg className="w-5 h-5 text-brandgold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Calendar Schedules
+              </h2>
+              <p className="text-xs text-branddark-muted mt-1">Review live bookings list across all campus classrooms.</p>
+            </div>
+
+            {/* List */}
+            <div className="flex-1 min-h-[300px] max-h-[500px] overflow-y-auto space-y-3.5 pr-1">
+              {bookings.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center border border-dashed border-branddark-border/60 rounded-xl p-8 text-center">
+                  <p className="text-sm text-branddark-muted">No reservations booked on calendar.</p>
+                </div>
+              ) : (
+                bookings.map((booking) => {
+                  const isOwnBooking = booking.lecturer_email === userEmail;
+                  return (
+                    <div
+                      key={booking.id}
+                      className={`bg-branddark-input/30 border p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-200 hover:border-brandpurple/30 ${
+                        isOwnBooking ? "border-brandpurple/20 bg-brandpurple/5" : "border-branddark-border/40"
+                      }`}
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-base text-white tracking-tight">{booking.roomName}</span>
+                          {isOwnBooking && (
+                            <span className="text-[9px] px-1.5 py-0.5 bg-brandpurple/20 text-brandpurple-light border border-brandpurple/30 rounded font-bold uppercase tracking-wider">
+                              Mine
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-branddark-muted">
+                          <svg className="w-3.5 h-3.5 text-brandpurple/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>
+                            {booking.start_time} - {booking.end_time}
+                          </span>
+                        </div>
+                        <div className="text-xs text-branddark-muted select-none">
+                          Reserved by: <span className="text-gray-300 font-medium">{booking.lecturer_email}</span>
+                        </div>
+                      </div>
+
+                      {/* Date badge */}
+                      <div className="sm:self-center shrink-0">
+                        <span className="px-3.5 py-1.5 bg-brandgold/10 text-brandgold border border-brandgold/20 rounded-lg text-xs font-bold tracking-wide shadow-sm shadow-brandgold/5 flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {booking.date}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
-        ))}
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
