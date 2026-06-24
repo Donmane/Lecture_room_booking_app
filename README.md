@@ -4,7 +4,7 @@ A role-based lecture room booking system built with React and Supabase. Designed
 
 Live Demo
 
-🔗 [Coming soon on Vercel]
+🔗 https://lecture-room-booking-app.vercel.app/
 
 Features
 
@@ -106,7 +106,7 @@ src/
 
 Author
 
-Daniel Edith-Agoye (Markaid)
+Edith-Agoye Daniel Olamide
 
 
 GitHub: @Donmane
