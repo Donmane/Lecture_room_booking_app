@@ -28,9 +28,9 @@ function Login() {
       .single();
 
     const role = roleData?.role || "student";
-    if (role === "admin") window.location.href = "/admin";
-    else if (role === "lecturer") window.location.href = "/lecturer";
-    else window.location.href = "/student";
+    if (role === "admin") window.location.href = "../admin/Admindashboard.jsx";
+    else if (role === "lecturer") window.location.href = "../lecturer/Lecturerdashboard.jsx";
+    else window.location.href = "../student/Studentdashboard.jsx";
   };
   return (
     <>
