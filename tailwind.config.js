@@ -8,20 +8,20 @@ export default {
     extend: {
       colors: {
         branddark: {
-          bg: '#0a0d16',      // Very deep tech dark blue-gray
-          card: '#121824',    // Dark card background
-          input: '#1a202c',   // Input field background
-          border: '#1f293d',  // Subtle borders
-          muted: '#8e9bb0',   // Muted text
+          bg: '#000000',      // Pure black background
+          card: '#0a0a0a',    // Clean dark grey card background
+          input: '#0e0e11',   // Input field background
+          border: '#1e1e22',  // Minimal border color
+          muted: '#71717a',   // Muted text
         },
         brandpurple: {
-          light: '#a78bfa',
-          DEFAULT: '#7c3aed',
-          dark: '#5b21b6',
+          light: '#818cf8',
+          DEFAULT: '#6366f1',
+          dark: '#4f46e5',
         },
         brandgold: {
-          light: '#fcd34d',
-          DEFAULT: '#f59e0b',
+          light: '#fbbf24',
+          DEFAULT: '#d97706',
           dark: '#b45309',
         }
       }
